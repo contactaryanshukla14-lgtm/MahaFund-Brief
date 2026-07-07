@@ -203,6 +203,6 @@ MahaFund-Brief/
   <br/>
   <img src="frontend/assets/logo.png" alt="MahaFund Brief" height="40">
   <br/><br/>
-  <p>Built by <a href="https://arisetoascend.com"><strong>Arise To Ascend</strong></a> · Powering the future of Real Estate Finance with AI.</p>
+  <p><strong>Made by Aaryan Shukla</strong> | Built for <a href="https://arisetoascend.com"><strong>Arise To Ascend</strong></a> · Powering the future of Real Estate Finance with AI.</p>
   <p><sub>Data sourced from MahaRERA, Zaubacorp, 99acres, Housing.com · Reports are AI-generated and should be independently verified.</sub></p>
 </div>
