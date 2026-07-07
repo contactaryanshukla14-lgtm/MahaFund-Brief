@@ -5,12 +5,12 @@ FROM python:3.11-slim
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
-    libgconf-2-4 \
     libnss3 \
     libxss1 \
     libasound2 \
     fonts-liberation \
-    libappindicator3-1 \
+    libxdamage1 \
+    libxrandr2 \
     xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
