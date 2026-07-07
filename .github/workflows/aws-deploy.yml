@@ -45,17 +45,35 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+    - name: Validate App Runner Service ARN
+      run: |
+        if [ -z "${{ secrets.APP_RUNNER_SERVICE_ARN }}" ]; then
+          echo "ERROR: APP_RUNNER_SERVICE_ARN secret is not set. Add it in repository secrets (Settings → Secrets and variables → Actions)."
+          exit 1
+        fi
+      shell: bash
+
     - name: Deploy to App Runner Image
       id: deploy-apprunner
+      env:
+        SERVICE_ARN: ${{ secrets.APP_RUNNER_SERVICE_ARN }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
         cat > /tmp/source-config.json <<EOF
         {
           "ImageRepository": {
-            "ImageIdentifier": "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}",
+            "ImageIdentifier": "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}",
             "ImageRepositoryType": "ECR"
           }
         }
         EOF
+        if [ -z "$SERVICE_ARN" ]; then
+          echo "SERVICE_ARN is empty; aborting."
+          exit 1
+        fi
+        echo "Deploying to service: ${SERVICE_ARN:0:20}... (masked)"
         aws apprunner update-service \
-          --service-arn "${{ env.APP_RUNNER_SERVICE_ARN }}" \
+          --service-arn "$SERVICE_ARN" \
           --source-configuration file:///tmp/source-config.json
