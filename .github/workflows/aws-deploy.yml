@@ -47,8 +47,15 @@ jobs:
 
     - name: Deploy to App Runner Image
       id: deploy-apprunner
-      # Using AWS CLI to update the App Runner service to the new image
       run: |
+        cat > /tmp/source-config.json <<EOF
+        {
+          "ImageRepository": {
+            "ImageIdentifier": "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}",
+            "ImageRepositoryType": "ECR"
+          }
+        }
+        EOF
         aws apprunner update-service \
-          --service-arn ${{ env.APP_RUNNER_SERVICE_ARN }} \
-          --source-configuration "{\"ImageRepository\":{\"ImageIdentifier\":\"${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}\",\"ImageRepositoryType\":\"ECR\"}}"
+          --service-arn "${{ env.APP_RUNNER_SERVICE_ARN }}" \
+          --source-configuration file:///tmp/source-config.json
