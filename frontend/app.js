@@ -1,0 +1,185 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   MahaFund Brief — Frontend Application Logic
+   Handles form submission, tab switching, progress simulation,
+   and communication with the FastAPI backend.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const API_BASE = window.location.origin;
+
+// ── Tab Switching ──────────────────────────────────────────────────────
+function switchTab(tab) {
+    const reraTab = document.getElementById('tab-rera');
+    const manualTab = document.getElementById('tab-manual');
+    const reraForm = document.getElementById('form-rera');
+    const manualForm = document.getElementById('form-manual');
+
+    if (tab === 'rera') {
+        reraTab.classList.add('active');
+        manualTab.classList.remove('active');
+        reraForm.classList.remove('hidden');
+        manualForm.classList.add('hidden');
+    } else {
+        manualTab.classList.add('active');
+        reraTab.classList.remove('active');
+        manualForm.classList.remove('hidden');
+        reraForm.classList.add('hidden');
+    }
+
+    // Reset any visible progress/errors
+    document.getElementById('progress-area').classList.add('hidden');
+    document.getElementById('error-area').classList.add('hidden');
+}
+
+// ── Form Submissions ───────────────────────────────────────────────────
+function submitRera(event) {
+    event.preventDefault();
+    const rera = document.getElementById('rera-input').value.trim();
+    if (!rera) return;
+    startGeneration({ rera_number: rera });
+}
+
+function submitManual(event) {
+    event.preventDefault();
+    const project = document.getElementById('project-input').value.trim();
+    const developer = document.getElementById('developer-input').value.trim();
+    const location = document.getElementById('location-input').value.trim();
+    if (!project) return;
+    startGeneration({ project, developer, location });
+}
+
+// ── Generation Pipeline ────────────────────────────────────────────────
+async function startGeneration(payload) {
+    // Hide forms, show progress
+    document.getElementById('form-rera').classList.add('hidden');
+    document.getElementById('form-manual').classList.add('hidden');
+    document.getElementById('error-area').classList.add('hidden');
+    document.getElementById('progress-area').classList.remove('hidden');
+
+    // Disable tab switching during generation
+    document.getElementById('tab-rera').disabled = true;
+    document.getElementById('tab-manual').disabled = true;
+
+    // Start progress simulation
+    const progressSim = simulateProgress();
+
+    try {
+        const response = await fetch(`${API_BASE}/generate-brief`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        // Stop simulation
+        progressSim.complete();
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.detail || `Server error: ${response.status}`);
+        }
+
+        // Download the DOCX
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = 'MahaFund_Brief.docx';
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename="?(.+?)"?$/);
+            if (match) filename = match[1];
+        }
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Show success state briefly, then reset
+        updateProgress(100, 'Brief downloaded successfully!', 4);
+        setTimeout(resetForm, 3000);
+
+    } catch (error) {
+        progressSim.complete();
+        showError(error.message);
+        setTimeout(resetForm, 5000);
+    }
+}
+
+// ── Progress Simulation ────────────────────────────────────────────────
+function simulateProgress() {
+    let progress = 0;
+    let step = 0;
+    let cancelled = false;
+
+    const stages = [
+        { target: 25, duration: 20000, label: 'Extracting MahaRERA data...', step: 1 },
+        { target: 50, duration: 30000, label: 'Gathering market intelligence...', step: 2 },
+        { target: 75, duration: 15000, label: 'Running AI eligibility analysis...', step: 3 },
+        { target: 90, duration: 10000, label: 'Generating report document...', step: 4 },
+    ];
+
+    function runStage(idx) {
+        if (cancelled || idx >= stages.length) return;
+        const stage = stages[idx];
+        updateProgress(progress, stage.label, stage.step);
+
+        const interval = setInterval(() => {
+            if (cancelled) { clearInterval(interval); return; }
+            progress += (stage.target - progress) * 0.03;
+            if (progress >= stage.target - 1) {
+                progress = stage.target;
+                clearInterval(interval);
+                runStage(idx + 1);
+            }
+            updateProgress(Math.round(progress), stage.label, stage.step);
+        }, stage.duration / 30);
+    }
+
+    runStage(0);
+
+    return {
+        complete: () => {
+            cancelled = true;
+        }
+    };
+}
+
+function updateProgress(percent, statusText, activeStep) {
+    document.getElementById('progress-fill').style.width = percent + '%';
+    document.getElementById('progress-status').textContent = statusText;
+
+    const steps = ['step-rera-progress', 'step-agents-progress', 'step-analysis-progress', 'step-report-progress'];
+    steps.forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.classList.remove('active', 'done');
+        if (i + 1 < activeStep) el.classList.add('done');
+        else if (i + 1 === activeStep) el.classList.add('active');
+    });
+}
+
+// ── Error Display ──────────────────────────────────────────────────────
+function showError(message) {
+    document.getElementById('progress-area').classList.add('hidden');
+    const errorArea = document.getElementById('error-area');
+    document.getElementById('error-message').textContent = message;
+    errorArea.classList.remove('hidden');
+}
+
+// ── Reset Form ─────────────────────────────────────────────────────────
+function resetForm() {
+    document.getElementById('progress-area').classList.add('hidden');
+    document.getElementById('error-area').classList.add('hidden');
+    document.getElementById('tab-rera').disabled = false;
+    document.getElementById('tab-manual').disabled = false;
+
+    // Show whichever tab is currently active
+    if (document.getElementById('tab-rera').classList.contains('active')) {
+        document.getElementById('form-rera').classList.remove('hidden');
+    } else {
+        document.getElementById('form-manual').classList.remove('hidden');
+    }
+
+    // Reset progress bar
+    document.getElementById('progress-fill').style.width = '0%';
+}

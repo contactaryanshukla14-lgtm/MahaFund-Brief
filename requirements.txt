@@ -1,0 +1,10 @@
+langgraph
+playwright
+httpx
+beautifulsoup4
+python-docx
+pydantic
+fastapi
+uvicorn
+python-dotenv
+python-multipart

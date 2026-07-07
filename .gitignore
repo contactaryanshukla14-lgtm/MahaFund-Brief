@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables (contains API keys)
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Debug artifacts
+debug_*.html
+debug_*.png
+test_*.py
+temp_*.pdf
+captcha_*.png
+*.log
+
+# Output (generated documents)
+output/
+
+# OS
+Thumbs.db
+.DS_Store
