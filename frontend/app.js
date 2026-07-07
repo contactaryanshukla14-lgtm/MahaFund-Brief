@@ -4,7 +4,11 @@
    and communication with the FastAPI backend.
    ═══════════════════════════════════════════════════════════════════════ */
 
-const API_BASE = window.location.origin;
+// Update this URL once your AWS App Runner service is deployed
+const AWS_API_URL = 'https://YOUR_APP_RUNNER_ID.awsapprunner.com';
+
+const isProduction = window.location.hostname === 'mahafundbrief.qd.je' || window.location.hostname.includes('vercel.app');
+const API_BASE = isProduction ? AWS_API_URL : window.location.origin;
 
 // ── Tab Switching ──────────────────────────────────────────────────────
 function switchTab(tab) {
