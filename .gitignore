@@ -35,3 +35,8 @@ output/
 # OS
 Thumbs.db
 .DS_Store
+
+# Stray files
+*.mp4
+*.docx
+design-system/
