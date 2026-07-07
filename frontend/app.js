@@ -4,8 +4,8 @@
    and communication with the FastAPI backend.
    ═══════════════════════════════════════════════════════════════════════ */
 
-// Update this URL once your AWS EC2 instance is running (e.g., http://54.12.34.56:8000)
-const AWS_API_URL = 'http://YOUR_EC2_PUBLIC_IP:8000';
+// Update this URL once your AWS App Runner service is deployed
+const AWS_API_URL = 'https://YOUR_APP_RUNNER_ID.awsapprunner.com';
 
 const isProduction = window.location.hostname === 'mahafundbrief.qd.je' || window.location.hostname.includes('vercel.app');
 const API_BASE = isProduction ? AWS_API_URL : window.location.origin;
