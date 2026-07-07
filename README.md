@@ -11,7 +11,7 @@
     <img src="https://img.shields.io/badge/Groq-LPU_Inference-000000?style=flat-square" alt="Groq">
     <img src="https://img.shields.io/badge/Playwright-Headless_Scraping-2EAD33?style=flat-square&logo=playwright&logoColor=white" alt="Playwright">
     <img src="https://img.shields.io/badge/Docker-Container_Ready-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
-    <img src="https://img.shields.io/badge/AWS-ECS%20/%20AppRunner-FF9900?style=flat-square&logo=amazonwebservices&logoColor=white" alt="AWS">
+    <img src="https://img.shields.io/badge/AWS-EC2-FF9900?style=flat-square&logo=amazonwebservices&logoColor=white" alt="AWS">
   </p>
 
   <p>
@@ -41,7 +41,10 @@
 
 ## 🏗️ System Architecture
 
-The platform is built as a **stateful directed acyclic graph (DAG)** using LangGraph. Each node in the graph is a specialized agent that executes autonomously, with conditional routing based on upstream results. This is not a simple chain — it handles failures, fallbacks, and cross-agent data dependencies.
+### Backend & Infrastructure
+- **FastAPI:** High-performance, asynchronous REST API serving the pipeline.
+- **Docker:** Fully containerized backend, deployed to AWS EC2 Free Tier.
+- **Python-docx:** Programmatic generation of the final, branded intelligence report.
 
 ```mermaid
 graph TD
@@ -165,7 +168,7 @@ docker build -t mahafund-brief .
 docker run -p 8000:8000 --env-file .env mahafund-brief
 ```
 
-The Docker image bundles Chromium for headless scraping. Ready for deployment to **AWS ECS**, **AWS AppRunner**, or any container orchestrator.
+The Docker image bundles Chromium for headless scraping. It is designed to be built via CI/CD (GitHub Actions) and pulled onto an **AWS EC2** instance to run scalably within free tier limits.
 
 ---
 
