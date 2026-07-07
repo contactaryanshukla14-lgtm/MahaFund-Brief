@@ -8,3 +8,5 @@ fastapi
 uvicorn
 python-dotenv
 python-multipart
+google-genai
+groq
