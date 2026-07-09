@@ -273,9 +273,9 @@ Project Data:
     return {"final_brief": final_brief}
 
 
-async def generate_docx_node(state: PipelineState) -> Dict[str, Any]:
-    log.info("Generating DOCX...")
-    from src.output.docx_generator import generate_docx
+async def generate_pdf_node(state: PipelineState) -> Dict[str, Any]:
+    log.info("Generating PDF...")
+    from src.output.pdf_generator import generate_pdf
 
     final_brief = state.get("final_brief", {})
 
@@ -286,9 +286,8 @@ async def generate_docx_node(state: PipelineState) -> Dict[str, Any]:
 
     rera_num = state.get("rera_number", "UNKNOWN")
     timestamp = int(time.time())
-    output_path = os.path.join(output_dir, f"Brief_{rera_num}_{timestamp}.docx")
-    template_path = "src/output/template.docx"
+    output_path = os.path.join(output_dir, f"Brief_{rera_num}_{timestamp}.pdf")
 
-    generate_docx(final_brief, template_path, output_path)
+    await generate_pdf(final_brief, output_path)
 
-    return {"docx_path": output_path}
+    return {"pdf_path": output_path}

@@ -54,7 +54,7 @@ async def generate_brief(request: BriefRequest):
         "partial_briefs": [],
         "agent_statuses": {},
         "final_brief": {},
-        "docx_path": ""
+        "pdf_path": ""
     }
     
     log.info(f"API request received for RERA: {request.rera_number} / Project: {request.project}")
@@ -68,13 +68,13 @@ async def generate_brief(request: BriefRequest):
             
         try:
             final_state = task.result()
-            docx_path = final_state.get("docx_path")
-            if not docx_path or not os.path.exists(docx_path):
-                yield json.dumps({"status": "error", "detail": "Pipeline failed to generate DOCX file."}) + "\n"
+            pdf_path = final_state.get("pdf_path")
+            if not pdf_path or not os.path.exists(pdf_path):
+                yield json.dumps({"status": "error", "detail": "Pipeline failed to generate PDF file."}) + "\n"
                 return
                 
-            filename = os.path.basename(docx_path)
-            with open(docx_path, "rb") as f:
+            filename = os.path.basename(pdf_path)
+            with open(pdf_path, "rb") as f:
                 encoded = base64.b64encode(f.read()).decode('utf-8')
                 
             yield json.dumps({

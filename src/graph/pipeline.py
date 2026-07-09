@@ -6,7 +6,7 @@ from src.graph.nodes import (
     merge_node,
     synthesize_node,
     eligibility_node,
-    generate_docx_node
+    generate_pdf_node
 )
 
 def check_maharera_success(state: PipelineState) -> str:
@@ -26,7 +26,7 @@ def build_graph() -> StateGraph:
     workflow.add_node("merge", merge_node)
     workflow.add_node("synthesize", synthesize_node)
     workflow.add_node("eligibility", eligibility_node)
-    workflow.add_node("generate_docx", generate_docx_node)
+    workflow.add_node("generate_pdf", generate_pdf_node)
     
     def entry_point(state: PipelineState) -> str:
         if not state.get("rera_number"):
@@ -52,7 +52,7 @@ def build_graph() -> StateGraph:
     workflow.add_edge("downstream_agents", "merge")
     workflow.add_edge("merge", "synthesize")
     workflow.add_edge("synthesize", "eligibility")
-    workflow.add_edge("eligibility", "generate_docx")
-    workflow.add_edge("generate_docx", END)
+    workflow.add_edge("eligibility", "generate_pdf")
+    workflow.add_edge("generate_pdf", END)
     
     return workflow.compile()

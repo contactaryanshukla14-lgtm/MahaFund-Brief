@@ -111,12 +111,12 @@ async function startGeneration(payload) {
                                 byteNumbers[i] = byteCharacters.charCodeAt(i);
                             }
                             const byteArray = new Uint8Array(byteNumbers);
-                            const blob = new Blob([byteArray], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+                            const blob = new Blob([byteArray], { type: "application/pdf" });
                             
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            a.download = data.filename || 'MahaFund_Brief.docx';
+                            a.download = data.filename || 'MahaFund_Brief.pdf';
                             document.body.appendChild(a);
                             a.click();
                             document.body.removeChild(a);
