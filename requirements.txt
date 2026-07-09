@@ -11,3 +11,4 @@ python-multipart
 google-genai
 groq
 PyMuPDF
+curl_cffi
