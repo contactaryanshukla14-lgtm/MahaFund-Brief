@@ -15,7 +15,7 @@
   </p>
 
   <p>
-    <a href="https://mahafundbrief.qd.je"><strong>🌐 Live Site</strong></a> ·
+    <a href="https://mahafundbrief.arisetoascend.com"><strong>🌐 Live Site</strong></a> ·
     <a href="https://arisetoascend.com"><strong>🏢 Agency: Arise To Ascend</strong></a>
   </p>
 </div>
