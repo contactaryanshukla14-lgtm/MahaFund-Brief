@@ -181,9 +181,7 @@ class MahareraAgent(BaseAgent):
                         await page.wait_for_load_state("domcontentloaded", timeout=15000)
                         await page.wait_for_timeout(6000)
                         
-                        html_dump = await page.content()
-                        with open("C:/Users/shukl/.gemini/antigravity-ide/brain/3acd3efd-603a-4b6c-9f05-2d0cc2fddd71/scratch/maharera_after_captcha.html", "w", encoding="utf-8") as f:
-                            f.write(html_dump)
+                        # HTML successfully loaded after captcha
                         break
 
                 # ── Step 4: Extract page HTML ──────────────────────────────

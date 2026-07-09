@@ -33,20 +33,23 @@ class ZaubacorpAgent(BaseAgent):
         # ── Step 1: DuckDuckGo search ──────────────────────────────────
         log.info(f"Searching DuckDuckGo for: site:zaubacorp.com {promoter_name}")
         search_url = "https://html.duckduckgo.com/html/"
-        res = curl_requests.post(search_url, data={"q": f"site:zaubacorp.com {promoter_name}"}, impersonate="chrome120")
-
         target_company = None
-        if res.status_code == 200:
-            soup = BeautifulSoup(res.text, "html.parser")
-            for a in soup.select("a.result__url"):
-                href = a.get("href", "")
-                text = a.text.strip()
-                if "zaubacorp.com/company/" in href or "zaubacorp.com/company/" in text:
-                    real_url = f"https://{text}" if "zaubacorp.com" in text else href
-                    if not real_url.startswith("http"):
-                        real_url = "https://" + real_url
-                    target_company = {"text": text, "href": real_url}
-                    break
+        
+        try:
+            res = curl_requests.post(search_url, data={"q": f"site:zaubacorp.com {promoter_name}"}, impersonate="chrome120", timeout=10)
+            if res.status_code == 200:
+                soup = BeautifulSoup(res.text, "html.parser")
+                for a in soup.select("a.result__url"):
+                    href = a.get("href", "")
+                    text = a.text.strip()
+                    if "zaubacorp.com/company/" in href or "zaubacorp.com/company/" in text:
+                        real_url = f"https://{text}" if "zaubacorp.com" in text else href
+                        if not real_url.startswith("http"):
+                            real_url = "https://" + real_url
+                        target_company = {"text": text, "href": real_url}
+                        break
+        except Exception as e:
+            log.warning(f"DuckDuckGo search failed for Zaubacorp: {e}")
 
         if not target_company:
             log.warning("No company links found in DuckDuckGo results.")
