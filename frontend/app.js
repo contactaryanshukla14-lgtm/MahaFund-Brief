@@ -73,35 +73,67 @@ async function startGeneration(payload) {
             body: JSON.stringify(payload),
         });
 
-        // Stop simulation
-        progressSim.complete();
-
         if (!response.ok) {
+            progressSim.complete();
             const errData = await response.json().catch(() => ({}));
             throw new Error(errData.detail || `Server error: ${response.status}`);
         }
 
-        // Download the DOCX
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const contentDisposition = response.headers.get('content-disposition');
-        let filename = 'MahaFund_Brief.docx';
-        if (contentDisposition) {
-            const match = contentDisposition.match(/filename="?(.+?)"?$/);
-            if (match) filename = match[1];
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let done = false;
+
+        while (!done) {
+            const { value, done: readerDone } = await reader.read();
+            done = readerDone;
+            if (value) {
+                const chunkStr = decoder.decode(value, { stream: true });
+                const lines = chunkStr.split('\n');
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line) continue;
+                    
+                    try {
+                        const data = JSON.parse(line);
+                        
+                        if (data.status === 'error') {
+                            throw new Error(data.detail || 'Pipeline error');
+                        }
+                        
+                        if (data.status === 'complete') {
+                            progressSim.complete();
+                            
+                            // Convert Base64 back to Blob
+                            const byteCharacters = atob(data.file_base64);
+                            const byteNumbers = new Array(byteCharacters.length);
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+                            }
+                            const byteArray = new Uint8Array(byteNumbers);
+                            const blob = new Blob([byteArray], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+                            
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = data.filename || 'MahaFund_Brief.docx';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+
+                            updateProgress(100, 'Brief downloaded successfully!', 4);
+                            setTimeout(resetForm, 3000);
+                        }
+                        // If status === 'processing', we just do nothing and let the simulation run
+                    } catch (e) {
+                        if (e.message !== 'Unexpected end of JSON input') {
+                            throw e;
+                        }
+                    }
+                }
+            }
         }
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        // Show success state briefly, then reset
-        updateProgress(100, 'Brief downloaded successfully!', 4);
-        setTimeout(resetForm, 3000);
 
     } catch (error) {
         progressSim.complete();

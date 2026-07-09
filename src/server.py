@@ -1,6 +1,9 @@
 import os
+import json
+import base64
+import asyncio
 from fastapi import FastAPI, HTTPException, BackgroundTasks
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -56,23 +59,34 @@ async def generate_brief(request: BriefRequest):
     
     log.info(f"API request received for RERA: {request.rera_number} / Project: {request.project}")
     
-    try:
-        final_state = await graph.ainvoke(initial_state)
-    except Exception as e:
-        log.error(f"Graph execution failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    async def generate_stream():
+        task = asyncio.create_task(graph.ainvoke(initial_state))
         
-    docx_path = final_state.get("docx_path")
-    if not docx_path or not os.path.exists(docx_path):
-        raise HTTPException(status_code=500, detail="Pipeline failed to generate DOCX file.")
-        
-    filename = os.path.basename(docx_path)
-    
-    return FileResponse(
-        path=docx_path, 
-        filename=filename,
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    )
+        while not task.done():
+            yield json.dumps({"status": "processing"}) + "\n"
+            await asyncio.sleep(15)
+            
+        try:
+            final_state = task.result()
+            docx_path = final_state.get("docx_path")
+            if not docx_path or not os.path.exists(docx_path):
+                yield json.dumps({"status": "error", "detail": "Pipeline failed to generate DOCX file."}) + "\n"
+                return
+                
+            filename = os.path.basename(docx_path)
+            with open(docx_path, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode('utf-8')
+                
+            yield json.dumps({
+                "status": "complete", 
+                "filename": filename,
+                "file_base64": encoded
+            }) + "\n"
+        except Exception as e:
+            log.error(f"Graph execution failed: {e}")
+            yield json.dumps({"status": "error", "detail": str(e)}) + "\n"
+
+    return StreamingResponse(generate_stream(), media_type="application/x-ndjson")
 
 @app.get("/health")
 def health_check():
